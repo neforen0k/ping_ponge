@@ -1,174 +1,101 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+from pygame import *
 
-# C extensions
-*.so
+back = (200, 255, 255)
+win_width = 600
+win_height = 600
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+window = display.set_mode((win_height, win_width))
+window.fill(back)
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+'''необходимые классы'''
+# класс-родитель для других спрайтов
+class GameSprite(sprite.Sprite):
+ # конструктор класса
+    def __init__(self, player_image, player_x, player_y, size_x, size_y, player_speed):
+        # Вызываем конструктор класса (Sprite):
+        sprite.Sprite.__init__(self)
+ 
+        # каждый спрайт должен хранить свойство image - изображение
+        self.image = transform.scale(image.load(player_image), (size_x, size_y))
+        self.speed = player_speed
+ 
+        # каждый спрайт должен хранить свойство rect - прямоугольник, в который он вписан
+        self.rect = self.image.get_rect()
+        self.rect.x = player_x
+        self.rect.y = player_y
+ # метод, отрисовывающий героя на окне
+    def reset(self):
+        window.blit(self.image, (self.rect.x, self.rect.y))
+# класс главного игрока
+class Player(GameSprite):
+    # метод для управления спрайтом стрелками клавиатуры
+    def update_r(self):
+        keys = key.get_pressed()
+        if keys[K_UP] and self.rect.y > 5:
+            self.rect.y -= self.speed
+        if keys[K_DOWN] and self.rect.y < win_height - 80:
+            self.rect.y += self.speed
+    def update_l(self):
+        keys = key.get_pressed()
+        if keys[K_w] and self.rect.y > 5:
+            self.rect.y -= self.speed
+        if keys[K_s] and self.rect.y < win_height - 80:
+            self.rect.y += self.speed
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+'''добавление цикла'''
+game = True
+finish = False
+clock = time.Clock()
+FPS = 60
+racket1 = Player('racket1.png', 10, 200, 50, 200, 10)
+racket2 = Player('racket1.png', 540, 200, 50, 200, 10)
+ball = GameSprite('images.png', 200, 200, 50, 50, 50)
+speed_x = 3
+speed_y = 3
+font.init()
+font = font.Font(None, 35)
+lose1 = font.render('PLAYER 1 LOSE!', True, (180, 0, 0))
+lose2 = font.render('PLAYER 2 LOSE!', True, (180, 0, 0))
+while game:
+    for e in event.get():
+        if e.type == QUIT:
+            game = False
+  
+    if finish != True:
+        window.fill(back)
+        racket1.update_l()
+        racket2.update_r()
+        ball.rect.x += speed_x
+        ball.rect.y += speed_y
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
 
-# Translations
-*.mo
-*.pot
+        if sprite.collide_rect(racket1, ball) or sprite.collide_rect(racket2, ball):
+            speed_x *= -1
+            speed_y *= 1
+      
+        #если мяч достигает границ экрана, меняем направление его движения
+        if ball.rect.y > win_height-50 or ball.rect.y < 0:
+            speed_y *= -1
 
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
 
-# Flask stuff:
-instance/
-.webassets-cache
+        #если мяч улетел дальше ракетки, выводим условие проигрыша для первого игрока
+        if ball.rect.x < 0:
+            finish = True
+            window.blit(lose1, (200, 200))
+            game_over = True
 
-# Scrapy stuff:
-.scrapy
 
-# Sphinx documentation
-docs/_build/
+       #если мяч улетел дальше ракетки, выводим условие проигрыша для второго игрока
+        if ball.rect.x > win_width:
+            finish = True
+            window.blit(lose2, (200, 200))
+            game_over = True
 
-# PyBuilder
-.pybuilder/
-target/
 
-# Jupyter Notebook
-.ipynb_checkpoints
+        racket1.reset()
+        racket2.reset()
+        ball.reset()
 
-# IPython
-profile_default/
-ipython_config.py
 
-# pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
-
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
-
-# UV
-#   Similar to Pipfile.lock, it is generally recommended to include uv.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#uv.lock
-
-# poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
-#poetry.lock
-
-# pdm
-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
-#pdm.lock
-#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
-#   in version control.
-#   https://pdm.fming.dev/latest/usage/project/#working-with-version-control
-.pdm.toml
-.pdm-python
-.pdm-build/
-
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
-
-# Ruff stuff:
-.ruff_cache/
-
-# PyPI configuration file
-.pypirc
+    display.update()
+    clock.tick(FPS)
